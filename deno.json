@@ -5,7 +5,7 @@
   "tasks": {
     "run": {
       "description": "Run the main exe in the sandbox folder",
-      "command": "mkdir -p sandbox; cd sandbox ;deno run -RW ../src/main.ts; cd .."
+      "command": "mkdir -p sandbox; cd sandbox ;deno run -RW ../src/main.ts"
     }
   }
 }

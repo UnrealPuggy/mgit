@@ -1,42 +1,52 @@
-import { ensureDir, exists } from "@std/fs";
-import { addGitIndex, constructTreeFromIndex } from "./objects/commit.ts";
+import { ensureDir, exists } from '@std/fs';
 import {
-  gitObjectType,
-  writeGitObject as createGitObject,
-} from "./objects/object.ts";
-import { resolveGitHead, writeGitHead } from "./repo/head.ts";
-import { branchDir, objDir } from "./repo/paths.ts";
+	addGitIndex,
+	constructTreeFromIndex,
+	createCommitObject,
+} from './objects/commit.ts';
+import {
+	writeGitObject as createGitObject,
+	gitObjectType,
+} from './objects/object.ts';
+import { resolveGitHead, writeGitHead } from './repo/head.ts';
+import { branchDir, objDir } from './repo/paths.ts';
 
-await writeGitHead({ "type": "symbolic", "ref": branchDir + "main" });
-
+await writeGitHead({ type: 'symbolic', ref: branchDir + 'main' });
 const readHead = await resolveGitHead();
-console.log(readHead ? "a" : "no head");
+console.log(readHead ? 'a' : 'no head');
 // await ensureDir(gitDir);
 await ensureDir(objDir);
 
 async function doFile(path: string) {
-  if (await exists(path, { isFile: true })) {
-    const fileHash = await createGitObject(
-      gitObjectType.blob,
-      await Deno.readFile(path),
-    );
-    const indexObj = { hash: fileHash, name: path };
-    await addGitIndex(indexObj);
-    return indexObj;
-  } else {
-    console.error("File either isn't a file or doesn't exist");
-    return;
-  }
+	if (await exists(path, { isFile: true })) {
+		const fileHash = await createGitObject(
+			gitObjectType.blob,
+			await Deno.readFile(path)
+		);
+		const indexObj = { hash: fileHash, name: path };
+		await addGitIndex(indexObj);
+		return indexObj;
+	} else {
+		console.error("File either isn't a file or doesn't exist");
+		return;
+	}
 }
 
-await doFile("README.md");
+await doFile('README.md');
 // await addGitIndex("README.md");
-await doFile("subfolder/funny_subfolderfile.txt");
-await doFile("subfolder/subsub/funny.txt");
-await doFile("subfolder/subsub/asd/asd.txt");
+await doFile('subfolder/funny_subfolderfile.txt');
+await doFile('subfolder/subsub/funny.txt');
+await doFile('subfolder/subsub/asd/asd.txt');
 
 const treeHash = await constructTreeFromIndex();
-console.log("New Tree Hash:", treeHash);
+console.log('New Tree Hash:', treeHash);
+const commit = await createCommitObject({
+	author: 'UnrealPuggy',
+	message: 'I like pugs',
+	parent: [],
+	tree: treeHash,
+});
+console.log(`Commit Hash: ${commit}`);
 // async function doDir(path: string):Promise<string> {
 //   const Direntries = await getDirEntries(path);
 //   const treeEntries:TreeEntry[] = [];
