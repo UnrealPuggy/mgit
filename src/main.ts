@@ -1,9 +1,6 @@
 import { ensureDir, exists } from '@std/fs';
-import {
-	addGitIndex,
-	constructTreeFromIndex,
-	createCommitObject,
-} from './objects/commit.ts';
+import { Command } from './commands/Command.ts';
+import { addGitIndex } from './objects/commit.ts';
 import {
 	writeGitObject as createGitObject,
 	gitObjectType,
@@ -13,7 +10,7 @@ import { branchDir, objDir } from './repo/paths.ts';
 
 await writeGitHead({ type: 'symbolic', ref: branchDir + 'main' });
 const readHead = await resolveGitHead();
-console.log(readHead ? 'a' : 'no head');
+console.log(readHead ? `Head:${readHead}` : 'so no head?');
 // await ensureDir(gitDir);
 await ensureDir(objDir);
 
@@ -27,26 +24,42 @@ async function doFile(path: string) {
 		await addGitIndex(indexObj);
 		return indexObj;
 	} else {
-		console.error("File either isn't a file or doesn't exist");
+		console.error(
+			`%cFile either isn't a file or doesn't exist: %c${path}`,
+			'color:red',
+			'color:green'
+		);
 		return;
 	}
 }
 
-await doFile('README.md');
-// await addGitIndex("README.md");
-await doFile('subfolder/funny_subfolderfile.txt');
-await doFile('subfolder/subsub/funny.txt');
-await doFile('subfolder/subsub/asd/asd.txt');
-
-const treeHash = await constructTreeFromIndex();
-console.log('New Tree Hash:', treeHash);
-const commit = await createCommitObject({
-	author: 'UnrealPuggy',
-	message: 'I like pugs',
-	parent: [],
-	tree: treeHash,
+const addCMD = new Command().execute(async (flags, ...args) => {
+	console.log('add', args);
 });
-console.log(`Commit Hash: ${commit}`);
+const rootCMD = new Command();
+rootCMD
+	.flag('--sus', ['-s'])
+	.option('--pug', ['-p'])
+	.execute((flags) => {
+		console.log('flags', flags);
+	})
+	.subcommand('add', addCMD);
+await rootCMD.run(Deno.args);
+// await doFile('README.md');
+// await addGitIndex("README.md");
+// await doFile('subfolder/funny_subfolderfile.txt');
+// await doFile('subfolder/subsub/funny.txt');
+// await doFile('subfolder/subsub/asd/asd.txt');
+
+// const treeHash = await constructTreeFromIndex();
+// console.log('New Tree Hash:', treeHash);
+// const commit = await createCommitObject({
+// 	author: 'UnrealPuggy',
+// 	message: 'I like pugs',
+// 	parent: [],
+// 	tree: treeHash,
+// });
+// console.log(`Commit Hash: ${commit}`);
 // async function doDir(path: string):Promise<string> {
 //   const Direntries = await getDirEntries(path);
 //   const treeEntries:TreeEntry[] = [];

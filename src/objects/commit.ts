@@ -22,27 +22,10 @@ export interface IndexEntry {
 
 export async function addGitIndex(...entries: IndexEntry[]) {
 	let text = await readGitIndex();
-	// console.log(text);
 	for (const entry of entries) {
 		text = text.filter((i) => i.name != entry.name);
-		// if (!text.some((i) => i.name == entry.name)) {
 		text.push(entry);
-		// }
 	}
-	// const getUniqueBy = <T extends object, K extends keyof T>(
-	//   arr: T[],
-	//   prop: K,
-	// ) => {
-	//   const seen = new Set();
-	//   return arr.filter((item) => {
-	//     const value = item[prop];
-	//     if (seen.has(value)) {
-	//       return false; // Skip this item (duplicate key)
-	//     }
-	//     seen.add(value);
-	//     return true; // Keep this item
-	//   });
-	// };
 
 	return await Deno.writeTextFile(
 		indexPath,
@@ -51,33 +34,39 @@ export async function addGitIndex(...entries: IndexEntry[]) {
 }
 async function buildTree(entries: IndexEntry[], topDir = '') {
 	const treeEntries: TreeEntry[] = [];
+	const groups = new Map<string, IndexEntry[]>();
+
 	for (const entry of entries) {
 		if (!entry.name.startsWith(topDir)) continue;
-		const relPath = entry.name.slice(topDir.length);
 
-		const [topFolderName, ...nextPaths] = relPath.split('/');
-		// Skip it if there is already one like that. The filter on the subtree will handle all of the ones
-		// coming from this one
-		if (treeEntries.some((i) => i.name == topFolderName)) continue;
+		const realPath = entry.name.slice(topDir.length);
+		const [topFolderName] = realPath.split('/');
+		if (!groups.has(topFolderName)) groups.set(topFolderName, []);
+		groups.get(topFolderName)!.push(entry);
+	}
+	console.log(topDir, groups);
 
-		// The will be no nextpath if it is a file
-		if (nextPaths.length === 0) {
+	for (const [name, groupedEntries] of groups) {
+		// file
+		if (
+			groupedEntries.length === 1 &&
+			!groupedEntries[0].name.slice(topDir.length).includes('/')
+		) {
 			treeEntries.push({
-				hash: entry.hash,
-				name: topFolderName,
+				hash: groupedEntries[0].hash,
+				name,
 				type: TreeEntryType.blob,
 			});
 		} else {
-			// get all files that have the starting thing as the folder we want
-			const subtreeEntries = entries.filter((e) =>
-				e.name.startsWith(topDir + topFolderName + '/')
+			// folder
+			const subtreeHash = await buildTree(
+				groupedEntries,
+				// reconstruct path relative to cwd
+				topDir + name + '/'
 			);
 			treeEntries.push({
-				hash: await buildTree(
-					subtreeEntries,
-					topDir + topFolderName + '/'
-				),
-				name: topFolderName,
+				hash: subtreeHash,
+				name,
 				type: TreeEntryType.tree,
 			});
 		}
@@ -131,7 +120,7 @@ export async function readCommitObject(
 		parent: [],
 		tree: '',
 		author: '',
-	} as CommitObject;
+	};
 	for (const line of headerText.split('\n')) {
 		const spaceIndex = line.indexOf(' ');
 		if (spaceIndex === -1) continue; // or throw error
@@ -141,8 +130,7 @@ export async function readCommitObject(
 		if (key == 'parent') {
 			outObj.parent.push(value);
 		} else {
-			// deno-lint-ignore no-explicit-any
-			(outObj as any)[key] = value;
+			(outObj as stfu)[key] = value;
 		}
 		// console.log(key, JSON.stringify(value));
 	}
