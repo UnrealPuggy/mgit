@@ -39,7 +39,7 @@ export class Command {
 			);
 			return this;
 		}
-		this.params.set(stripDashes(name), {
+		this.params.set(name, {
 			type: CommandParamType.Flag,
 			aliases,
 		});
@@ -57,7 +57,7 @@ export class Command {
 			);
 			return this;
 		}
-		this.params.set(stripDashes(name), {
+		this.params.set(name, {
 			type: CommandParamType.Parameter,
 			aliases,
 		});
@@ -73,7 +73,7 @@ export class Command {
 	}
 	private resolveArg(arg: string): string | undefined {
 		for (const [name, param] of this.params) {
-			if (name === stripDashes(arg)) return name;
+			if (name === arg) return name;
 			if (param.aliases?.includes(arg as flagPrefix)) return name;
 		}
 		return undefined;
@@ -88,9 +88,9 @@ export class Command {
 
 		for (const [name, val] of this.params) {
 			if (val.type == CommandParamType.Flag) {
-				flags.set(name, false);
+				flags.set(stripDashes(name), false);
 			} else if (val.type == CommandParamType.Parameter) {
-				flags.set(name, '');
+				flags.set(stripDashes(name), '');
 			}
 		}
 		if (args.length > 0) {
@@ -127,7 +127,7 @@ export class Command {
 				return;
 			}
 			if (param.type == CommandParamType.Flag) {
-				flags.set(normalized, true);
+				flags.set(stripDashes(normalized), true);
 			}
 			if (param.type == CommandParamType.Parameter) {
 				const nextArg = args.shift();
@@ -138,7 +138,7 @@ export class Command {
 					);
 					continue;
 				}
-				flags.set(normalized, nextArg);
+				flags.set(stripDashes(normalized), nextArg);
 			}
 		}
 		const ret = this.exec(flags, ...positionals);
