@@ -14,6 +14,7 @@ console.log(readHead ? `Head:${readHead}` : 'so no head?');
 // await ensureDir(gitDir);
 await ensureDir(objDir);
 
+// deno-lint-ignore no-unused-vars
 async function doFile(path: string) {
 	if (await exists(path, { isFile: true })) {
 		const fileHash = await createGitObject(
@@ -33,8 +34,11 @@ async function doFile(path: string) {
 	}
 }
 
-const addCMD = new Command().execute(async (flags, ...args) => {
+const addCMD = new Command().flag('-pug').execute((flags, ...args) => {
 	console.log('add', args);
+	for (const [name, val] of flags) {
+		console.log(name, val);
+	}
 });
 const rootCMD = new Command();
 rootCMD
