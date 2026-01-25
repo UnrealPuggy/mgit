@@ -19,7 +19,7 @@ async function doFile(path: string) {
 	if (await exists(path, { isFile: true })) {
 		const fileHash = await createGitObject(
 			gitObjectType.blob,
-			await Deno.readFile(path)
+			await Deno.readFile(path),
 		);
 		const indexObj = { hash: fileHash, name: path };
 		await addGitIndex(indexObj);
@@ -28,14 +28,14 @@ async function doFile(path: string) {
 		console.error(
 			`%cFile either isn't a file or doesn't exist: %c${path}`,
 			'color:red',
-			'color:green'
+			'color:green',
 		);
 		return;
 	}
 }
 
 const addCMD = new Command().flag('-pug').execute((flags, ...args) => {
-	console.log('add', args);
+	console.log('add args', args);
 	for (const [name, val] of flags) {
 		console.log(name, val);
 	}

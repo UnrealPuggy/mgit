@@ -29,7 +29,7 @@ export async function addGitIndex(...entries: IndexEntry[]) {
 
 	return await Deno.writeTextFile(
 		indexPath,
-		text.map((i) => `${i.name}\0${i.hash}`).join('\n')
+		text.map((i) => `${i.name}\0${i.hash}`).join('\n'),
 	);
 }
 async function buildTree(entries: IndexEntry[], topDir = '') {
@@ -62,7 +62,7 @@ async function buildTree(entries: IndexEntry[], topDir = '') {
 			const subtreeHash = await buildTree(
 				groupedEntries,
 				// reconstruct path relative to cwd
-				topDir + name + '/'
+				topDir + name + '/',
 			);
 			treeEntries.push({
 				hash: subtreeHash,
@@ -94,12 +94,12 @@ export async function createCommitObject(obj: CommitObject) {
 	}\ntime ${Date.now()}\n\n${obj.message}`;
 	return await writeGitObject(
 		gitObjectType.commit,
-		new TextEncoder().encode(dat)
+		new TextEncoder().encode(dat),
 	);
 }
 
 export async function readCommitObject(
-	hash: string
+	hash: string,
 ): Promise<CommitObject | void> {
 	const gitObject = await lookupGitObject(hash);
 	if (gitObject.type != gitObjectType.commit) {
