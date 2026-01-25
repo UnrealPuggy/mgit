@@ -1,6 +1,6 @@
 import { ensureDir, exists } from '@std/fs';
 import { Command } from './commands/Command.ts';
-import { addGitIndex } from './objects/commit.ts';
+import { addGitIndex, constructTreeFromIndex } from './objects/commit/index.ts';
 import {
 	writeGitObject as createGitObject,
 	gitObjectType,
@@ -14,7 +14,6 @@ console.log(readHead ? `Head:${readHead}` : 'so no head?');
 // await ensureDir(gitDir);
 await ensureDir(objDir);
 
-// deno-lint-ignore no-unused-vars
 async function doFile(path: string) {
 	if (await exists(path, { isFile: true })) {
 		const fileHash = await createGitObject(
@@ -49,14 +48,14 @@ rootCMD
 	})
 	.subcommand('add', addCMD);
 await rootCMD.run(Deno.args);
-// await doFile('README.md');
+await doFile('README.md');
 // await addGitIndex("README.md");
-// await doFile('subfolder/funny_subfolderfile.txt');
-// await doFile('subfolder/subsub/funny.txt');
-// await doFile('subfolder/subsub/asd/asd.txt');
+await doFile('subfolder/funny_subfolderfile.txt');
+await doFile('subfolder/subsub/funny.txt');
+await doFile('subfolder/subsub/asd/asd.txt');
 
-// const treeHash = await constructTreeFromIndex();
-// console.log('New Tree Hash:', treeHash);
+const treeHash = await constructTreeFromIndex();
+console.log('New Tree Hash:', treeHash);
 // const commit = await createCommitObject({
 // 	author: 'UnrealPuggy',
 // 	message: 'I like pugs',
